@@ -2,6 +2,7 @@ import os
 import joblib
 import mlflow
 import mlflow.sklearn
+import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -16,10 +17,51 @@ from sklearn.metrics import (
 )
 
 
+# ---------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------
+
+MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+
 EXPERIMENT_NAME = "Employee_Attrition_Experiment_231FA04561"
 
+X_TRAIN_PATH = "data/processed/X_train.pkl"
+X_TEST_PATH = "data/processed/X_test.pkl"
+Y_TRAIN_PATH = "data/processed/y_train.pkl"
+Y_TEST_PATH = "data/processed/y_test.pkl"
 
-def evaluate_model(model, X_test, y_test):
+MODEL_DIR = "models"
+
+
+# ---------------------------------------------------------
+# MLflow setup
+# ---------------------------------------------------------
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+mlflow.set_experiment(EXPERIMENT_NAME)
+
+
+# ---------------------------------------------------------
+# Load data
+# ---------------------------------------------------------
+
+def load_data():
+
+    X_train = joblib.load(X_TRAIN_PATH)
+    X_test = joblib.load(X_TEST_PATH)
+
+    y_train = joblib.load(Y_TRAIN_PATH)
+    y_test = joblib.load(Y_TEST_PATH)
+
+    return X_train, X_test, y_train, y_test
+
+
+# ---------------------------------------------------------
+# Calculate metrics
+# ---------------------------------------------------------
+
+def calculate_metrics(model, X_test, y_test):
 
     predictions = model.predict(X_test)
 
@@ -58,141 +100,165 @@ def evaluate_model(model, X_test, y_test):
     return metrics
 
 
-def train_model(
-    model,
-    model_name,
-    X_train,
-    y_train,
-    X_test,
-    y_test
-):
+# ---------------------------------------------------------
+# Train model
+# ---------------------------------------------------------
+
+def train_model(model, model_name, X_train, X_test, y_train, y_test):
+
+    print("\n" + "=" * 60)
+    print(model_name)
+    print("=" * 60)
 
     with mlflow.start_run(
         run_name=model_name
     ):
+
+        # Train
+        print("\nTraining model...")
 
         model.fit(
             X_train,
             y_train
         )
 
-        metrics = evaluate_model(
+        # Evaluate
+        metrics = calculate_metrics(
             model,
             X_test,
             y_test
         )
 
-        mlflow.log_params(
-            model.get_params()
-        )
+        # Log parameters
+        params = model.get_params()
 
-        mlflow.log_metrics(
-            metrics
-        )
+        mlflow.log_params(params)
 
+        # Log metrics
+        mlflow.log_metrics(metrics)
+
+        # Log model
         mlflow.sklearn.log_model(
             model,
             "model"
         )
 
-        print("\n==========================")
-        print(model_name)
-        print("==========================")
+        # Save local model
+        os.makedirs(
+            MODEL_DIR,
+            exist_ok=True
+        )
 
-        for key, value in metrics.items():
+        filename = model_name.lower().replace(
+            " ",
+            "_"
+        ) + ".pkl"
+
+        model_path = os.path.join(
+            MODEL_DIR,
+            filename
+        )
+
+        joblib.dump(
+            model,
+            model_path
+        )
+
+        # Print results
+        print("\nResults:")
+
+        for metric, value in metrics.items():
+
             print(
-                f"{key}: {value:.4f}"
+                f"{metric}: {value:.4f}"
             )
 
-        return model, metrics
+        print("\nSaved model:")
+        print(model_path)
 
+        print("\nMLflow Run ID:")
+        print(mlflow.active_run().info.run_id)
+
+    return metrics
+
+
+# ---------------------------------------------------------
+# Main
+# ---------------------------------------------------------
 
 def main():
 
-    os.makedirs(
-        "models",
-        exist_ok=True
-    )
+    print("=" * 60)
+    print("EMPLOYEE ATTRITION MODEL TRAINING")
+    print("=" * 60)
 
-    X_train = joblib.load(
-        "data/processed/X_train.pkl"
-    )
+    print("\nLoading transformed data...")
 
-    X_test = joblib.load(
-        "data/processed/X_test.pkl"
-    )
+    X_train, X_test, y_train, y_test = load_data()
 
-    y_train = joblib.load(
-        "data/processed/y_train.pkl"
-    )
+    print("X_train:", X_train.shape)
+    print("X_test :", X_test.shape)
 
-    y_test = joblib.load(
-        "data/processed/y_test.pkl"
-    )
+    print("\nMLflow experiment:")
+    print(EXPERIMENT_NAME)
 
-    mlflow.set_experiment(
-        EXPERIMENT_NAME
-    )
+    # -----------------------------------------------------
+    # Model 1 - Logistic Regression
+    # -----------------------------------------------------
 
-    # -----------------------------
-    # Experiment 1
-    # -----------------------------
-
-    logistic = LogisticRegression(
+    logistic_model = LogisticRegression(
         max_iter=1000,
         random_state=42
     )
 
     train_model(
-        logistic,
-        "Logistic_Regression",
+        logistic_model,
+        "Logistic Regression",
         X_train,
-        y_train,
         X_test,
+        y_train,
         y_test
     )
 
-    # -----------------------------
-    # Experiment 2
-    # -----------------------------
+    # -----------------------------------------------------
+    # Model 2 - Decision Tree
+    # -----------------------------------------------------
 
-    tree = DecisionTreeClassifier(
+    decision_tree_model = DecisionTreeClassifier(
         random_state=42
     )
 
     train_model(
-        tree,
-        "Decision_Tree",
+        decision_tree_model,
+        "Decision Tree",
         X_train,
-        y_train,
         X_test,
+        y_train,
         y_test
     )
 
-    # -----------------------------
-    # Experiment 3
-    # -----------------------------
+    # -----------------------------------------------------
+    # Model 3 - Random Forest
+    # -----------------------------------------------------
 
-    forest = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
+    random_forest_model = RandomForestClassifier(
+        n_estimators=200,
+        random_state=42,
+        n_jobs=-1
     )
 
-    model, metrics = train_model(
-        forest,
-        "Random_Forest",
+    train_model(
+        random_forest_model,
+        "Random Forest",
         X_train,
-        y_train,
         X_test,
+        y_train,
         y_test
     )
 
-    joblib.dump(
-        model,
-        "models/random_forest_baseline.pkl"
-    )
-
-    print("\nBaseline training completed.")
+    print("\n" + "=" * 60)
+    print("ALL 3 MODELS TRAINED SUCCESSFULLY")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
