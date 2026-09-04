@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import pandas as pd
 
 
@@ -10,108 +9,92 @@ TRAIN_OUTPUT = "data/processed/train_features.csv"
 TEST_OUTPUT = "data/processed/test_features.csv"
 
 
-def create_features(df):
-    """
-    Create meaningful employee-level features.
+ENGINEERED_FEATURES = [
+    "TotalExperience",
+    "PromotionRatio",
+    "JobSatisfactionScore",
+    "YearsPerCompanyAge",
+    "CareerStagnationIndex"
+]
 
-    Features:
-    1. TotalExperience
-    2. PromotionRatio
-    3. JobSatisfactionScore
-    4. YearsPerCompanyAge
-    5. CareerStagnationIndex - original feature
-    """
+
+def create_features(df):
 
     df = df.copy()
 
-    # --------------------------------------------------
-    # Feature 1: TotalExperience
-    # --------------------------------------------------
-    if {
-        "YearsInCurrentRole",
-        "YearsAtCompany",
-        "YearsWithCurrManager"
-    }.issubset(df.columns):
+    # ---------------------------------------------------------
+    # 1. Total Experience
+    # ---------------------------------------------------------
 
-        df["TotalExperience"] = (
-            df["YearsAtCompany"]
-            + df["YearsInCurrentRole"]
-            + df["YearsWithCurrManager"]
-        )
+    df["TotalExperience"] = (
+        df["YearsAtCompany"]
+        + df["YearsInCurrentRole"]
+        + df["YearsWithCurrManager"]
+    )
 
-    # --------------------------------------------------
-    # Feature 2: PromotionRatio
-    # --------------------------------------------------
-    if {
-        "YearsSinceLastPromotion",
-        "YearsAtCompany"
-    }.issubset(df.columns):
+    # ---------------------------------------------------------
+    # 2. Promotion Ratio
+    # ---------------------------------------------------------
 
-        df["PromotionRatio"] = (
-            df["YearsSinceLastPromotion"]
-            / (df["YearsAtCompany"] + 1)
-        )
+    df["PromotionRatio"] = (
+        df["YearsSinceLastPromotion"]
+        / (df["YearsAtCompany"] + 1)
+    )
 
-    # --------------------------------------------------
-    # Feature 3: JobSatisfactionScore
-    # --------------------------------------------------
-    satisfaction_columns = [
-        "JobSatisfaction",
-        "EnvironmentSatisfaction",
-        "RelationshipSatisfaction"
-    ]
+    # ---------------------------------------------------------
+    # 3. Job Satisfaction Score
+    # ---------------------------------------------------------
 
-    if all(column in df.columns for column in satisfaction_columns):
+    df["JobSatisfactionScore"] = (
+        df["JobSatisfaction"]
+        + df["EnvironmentSatisfaction"]
+        + df["RelationshipSatisfaction"]
+    ) / 3
 
-        df["JobSatisfactionScore"] = (
-            df["JobSatisfaction"]
-            + df["EnvironmentSatisfaction"]
-            + df["RelationshipSatisfaction"]
-        ) / 3
+    # ---------------------------------------------------------
+    # 4. Years Per Company Age
+    # ---------------------------------------------------------
 
-    # --------------------------------------------------
-    # Feature 4: YearsPerCompanyAge
-    # --------------------------------------------------
-    if {
-        "YearsAtCompany",
-        "Age"
-    }.issubset(df.columns):
+    df["YearsPerCompanyAge"] = (
+        df["YearsAtCompany"]
+        / (df["Age"] + 1)
+    )
 
-        df["YearsPerCompanyAge"] = (
-            df["YearsAtCompany"]
-            / (df["Age"] + 1)
-        )
+    # ---------------------------------------------------------
+    # 5. Career Stagnation Index
+    # ---------------------------------------------------------
 
-    # --------------------------------------------------
-    # Feature 5: ORIGINAL FEATURE
-    # CareerStagnationIndex
-    # --------------------------------------------------
-    if {
-        "YearsAtCompany",
-        "YearsSinceLastPromotion"
-    }.issubset(df.columns):
-
-        df["CareerStagnationIndex"] = (
-            df["YearsAtCompany"]
-            / (df["YearsSinceLastPromotion"] + 1)
-        )
+    df["CareerStagnationIndex"] = (
+        df["YearsAtCompany"]
+        / (df["YearsSinceLastPromotion"] + 1)
+    )
 
     return df
 
 
 def main():
 
-    print("Loading processed datasets...")
+    print("=" * 60)
+    print("DVC STAGE 2 - FEATURE ENGINEERING")
+    print("=" * 60)
+
+    print("\nLoading processed datasets...")
 
     train = pd.read_csv(TRAIN_PATH)
     test = pd.read_csv(TEST_PATH)
 
-    print("Creating engineered features...")
+    print("Training shape:", train.shape)
+    print("Testing shape :", test.shape)
+
+    print("\nCreating engineered features...")
 
     train_features = create_features(train)
     test_features = create_features(test)
 
-    os.makedirs("data/processed", exist_ok=True)
+    os.makedirs(
+        "data/processed",
+        exist_ok=True
+    )
 
     train_features.to_csv(
         TRAIN_OUTPUT,
@@ -123,28 +106,19 @@ def main():
         index=False
     )
 
-    print("\nFeature engineering completed.")
+    print("\nEngineered features created:")
 
-    print("\nNew features created:")
-
-    features = [
-        "TotalExperience",
-        "PromotionRatio",
-        "JobSatisfactionScore",
-        "YearsPerCompanyAge",
-        "CareerStagnationIndex"
-    ]
-
-    for feature in features:
-        if feature in train_features.columns:
-            print("✓", feature)
+    for feature in ENGINEERED_FEATURES:
+        print("✓", feature)
 
     print("\nTraining feature shape:", train_features.shape)
-    print("Testing feature shape:", test_features.shape)
+    print("Testing feature shape :", test_features.shape)
 
-    print("\nFiles created:")
-    print(TRAIN_OUTPUT)
-    print(TEST_OUTPUT)
+    print("\nFeature engineering completed successfully.")
+
+    print("\nCreated:")
+    print("✓", TRAIN_OUTPUT)
+    print("✓", TEST_OUTPUT)
 
 
 if __name__ == "__main__":

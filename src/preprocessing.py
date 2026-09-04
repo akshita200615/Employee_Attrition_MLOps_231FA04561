@@ -8,33 +8,28 @@ PROCESSED_DIR = "data/processed"
 
 
 def load_data():
-    """Load the original IBM HR Employee Attrition dataset."""
-    df = pd.read_csv(RAW_PATH)
-    return df
+    return pd.read_csv(RAW_PATH)
 
 
 def preprocess_data(df):
-    """Basic preprocessing and target conversion."""
-
     df = df.copy()
 
-    # EmployeeNumber is only an identifier and is not useful for prediction
-    if "EmployeeNumber" in df.columns:
-        df = df.drop(columns=["EmployeeNumber"])
+    # Remove columns that contain no useful predictive information
+    columns_to_drop = [
+        "EmployeeNumber",
+        "EmployeeCount",
+        "Over18",
+        "StandardHours"
+    ]
 
-    # EmployeeCount has only one unique value
-    if "EmployeeCount" in df.columns:
-        df = df.drop(columns=["EmployeeCount"])
+    existing_columns = [
+        column for column in columns_to_drop
+        if column in df.columns
+    ]
 
-    # Over18 has only one value
-    if "Over18" in df.columns:
-        df = df.drop(columns=["Over18"])
+    df = df.drop(columns=existing_columns)
 
-    # StandardHours has only one value
-    if "StandardHours" in df.columns:
-        df = df.drop(columns=["StandardHours"])
-
-    # Convert target variable
+    # Convert target to numeric
     df["Attrition"] = df["Attrition"].map({
         "Yes": 1,
         "No": 0
@@ -44,7 +39,6 @@ def preprocess_data(df):
 
 
 def split_data(df):
-    """Split dataset into training and testing data."""
 
     X = df.drop(columns=["Attrition"])
     y = df["Attrition"]
@@ -83,27 +77,43 @@ def save_data(X_train, X_test, y_train, y_test):
 
 def main():
 
-    print("Loading dataset...")
+    print("=" * 60)
+    print("DVC STAGE 1 - DATA PREPROCESSING")
+    print("=" * 60)
+
+    print("\nLoading dataset...")
 
     df = load_data()
 
     print("Original shape:", df.shape)
 
+    print("\nApplying preprocessing...")
+
     df = preprocess_data(df)
 
     print("After preprocessing:", df.shape)
 
+    print("\nSplitting dataset...")
+
     X_train, X_test, y_train, y_test = split_data(df)
 
-    save_data(X_train, X_test, y_train, y_test)
-
     print("Training samples:", len(X_train))
-    print("Testing samples:", len(X_test))
+    print("Testing samples :", len(X_test))
+
+    print("\nSaving processed datasets...")
+
+    save_data(
+        X_train,
+        X_test,
+        y_train,
+        y_test
+    )
 
     print("\nPreprocessing completed successfully.")
-    print("Files created:")
-    print("data/processed/train.csv")
-    print("data/processed/test.csv")
+
+    print("\nCreated:")
+    print("✓ data/processed/train.csv")
+    print("✓ data/processed/test.csv")
 
 
 if __name__ == "__main__":
