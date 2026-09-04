@@ -1,0 +1,52 @@
+
+I
+)
+__dummy"
+__dummy_idJemployee_attrition
+‹«êÔØÒ†ä‹«êÔØÒ†ä
+j
+J
+employeeIBM HR employee identifier"EmployeeNumberJemployee_attrition
+‹«êÔØÒ†ä‹«êÔØÒ†ä1"$6eb54786-cb1c-460a-a367-be74a43fb275*‹«êÔ Êşä2Ñ
+°
+employee_featuresemployee_attritionemployee"
+Age"
+JobSatisfaction"
+EnvironmentSatisfaction"
+RelationshipSatisfaction"
+YearsAtCompany"
+YearsInCurrentRole"
+YearsWithCurrManager"
+YearsSinceLastPromotion"
+TotalExperience"
+PromotionRatio"
+JobSatisfactionScore"
+YearsPerCompanyAge"
+CareerStagnationIndex2€†°–:£event_timestampZ data/employee_features.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢employee_features_source’‹«êÔ˜¾ÛÃ"‹«êÔØÒ†ä@b
+EmployeeNumber’latest
+‹«êÔ°ÕÁä‹«êÔ°ÕÁäR§
+¤
+,feast.infra.online_stores.sqlite.SqliteTable"t
+LC:\Users\admin\Documents\Employee_Attrition_MLOps\feast\data\online_store.db$employee_attrition_employee_featuresb¸event_timestampZ data/employee_features.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢employee_features_sourceªemployee_attrition’‹«êÔ˜¾ÛÃ"‹«êÔØÒ†äŠ4
+
+employee_attrition
+‹«êÔØÓÄ‹«êÔØÓÄ’À
+½
+employee_featuresemployee_attrition"feature_view*Ñ
+°
+employee_featuresemployee_attritionemployee"
+Age"
+JobSatisfaction"
+EnvironmentSatisfaction"
+RelationshipSatisfaction"
+YearsAtCompany"
+YearsInCurrentRole"
+YearsWithCurrManager"
+YearsSinceLastPromotion"
+TotalExperience"
+PromotionRatio"
+JobSatisfactionScore"
+YearsPerCompanyAge"
+CareerStagnationIndex2€†°–:£event_timestampZ data/employee_features.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢employee_features_source’‹«êÔ˜¾ÛÃ"‹«êÔØÒ†ä@b
+EmployeeNumber’latest
+‹«êÔ°ÕÁä‹«êÔ°ÕÁä2‹«êÔ°ÕÁäB$749df9cf-8396-4f09-9a02-f62371332188
