@@ -1,0 +1,12 @@
+project: employee_attrition_231fa04561
+
+registry: data/registry.db
+
+provider: local
+
+online_store:
+  type: sqlite
+  path: data/online_store.db
+
+offline_store:
+  type: file
